@@ -1,15 +1,16 @@
 package main
 
-import (
-	"fmt"
-)
-
 func main() {
-	fmt.Println("sup")
 	Init()
 	st := "test"
 	it := int64(15)
-	Add(&st, &it)
+	ft := "tesr"
+	zt := int64(14)
+	Add(&st, &st, &it)
+	Add(&ft, &ft, &zt)
 	t := "tes"
-	Get(&t)
+	values := Get(&t)
+	for index := 0; index < len(values); index++ {
+		println(values[index].key)
+	}
 }

@@ -1,61 +1,64 @@
 package main
 
+import (
+	"sort"
+)
+
 var node *trieNode
 var currentNode *trieNode
 
 //trieNode is a node in Trie structure
 type trieNode struct {
 	children map[string]trieNode
-	symbol   string
 	words    map[string]int64
 }
 
-type sortPair struct {
+type SortPair struct {
 	key   string
 	value int64
 }
 
 //Init construtor
 func Init() {
-	node = &trieNode{children: make(map[string]trieNode), symbol: "", words: make(map[string]int64)}
+	node = &trieNode{children: make(map[string]trieNode), words: make(map[string]int64)}
 	currentNode = node
 }
 
 //Add function adds words + character entry to and Trie
-func Add(word *string, frequency *int64) {
+func Add(originalWord *string, word *string, frequency *int64) {
 	char := []rune(*word)
 	safeSubstring := char[0:1]
-	if currentNode.children[*word].symbol == "" {
-		newNode := &trieNode{children: make(map[string]trieNode), symbol: string(safeSubstring), words: make(map[string]int64)}
+	if _, exists := currentNode.children[string(safeSubstring)]; !exists {
+		newNode := &trieNode{children: make(map[string]trieNode), words: make(map[string]int64)}
 		if len(*word) == 1 {
-			newNode.words[*word] = *frequency
+			newNode.words[*originalWord] = *frequency
 		}
 		currentNode.children[string(safeSubstring)] = *newNode
 	}
 	if len(*word) > 1 {
 		child := currentNode.children[string(safeSubstring)]
 		currentNode = &child
-		safeRecursiveString := string(char[0 : len(*word)-1])
-		Add(&safeRecursiveString, frequency)
+		safeRecursiveString := string(char[1:len(*word)])
+		Add(originalWord, &safeRecursiveString, frequency)
 	}
 	currentNode = node
 }
 
 //Get returns autocomplete array of three top words by frequency
-func Get(word *string) [3]string {
+func Get(word *string) []SortPair {
 	char := []rune(*word)
 	for index := 0; index < len(char); index++ {
 		nodeWord := currentNode.children[string(char[index])]
-		println(nodeWord.symbol)
 		currentNode = &nodeWord
 	}
-	//var sort []sortPair
-	set := make(map[string]map[string]int64)
-	for index, child := range currentNode.children {
-		set[index] = child.words
+	set := []SortPair{}
+	for _, child := range currentNode.children {
+		for word, frequency := range child.words {
+			set = append(set, SortPair{key: word, value: frequency})
+		}
 	}
-	for child := range set {
-		println(child)
-	}
-	return [3]string{"", "", ""}
+	sort.Slice(set[:], func(i, j int) bool {
+		return set[i].key > set[j].key
+	})
+	return set[0:2]
 }
