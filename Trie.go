@@ -13,6 +13,8 @@ type trieNode struct {
 	words    map[string]int64
 }
 
+//SortPair is used for sorting the resulting frequencies
+//of all found autocomletion words
 type SortPair struct {
 	key   string
 	value int64
@@ -60,5 +62,6 @@ func Get(word *string) []SortPair {
 	sort.Slice(set[:], func(i, j int) bool {
 		return set[i].key > set[j].key
 	})
+	currentNode = node
 	return set[0:2]
 }
