@@ -2,15 +2,18 @@ package main
 
 func main() {
 	Init()
-	st := "test"
-	it := int64(15)
-	ft := "tesr"
-	zt := int64(14)
-	Add(&st, &st, &it)
-	Add(&ft, &ft, &zt)
-	t := "tes"
-	values := Get(&t)
-	for index := 0; index < len(values); index++ {
-		println(values[index].key)
+	word := "tes"
+	completed := SuggestedWords(&word)
+	for _, item := range completed {
+		println(item.key)
 	}
+	// for {
+	// 	reader := bufio.NewReader(os.Stdin)
+	// 	fmt.Print("Enter text: ")
+	// 	text, _ := reader.ReadString('\n')
+	// 	completed := Get(&text)
+	// 	for item := range completed {
+	// 		print(item)
+	// 	}
+	// }
 }
