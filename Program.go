@@ -3,6 +3,7 @@ package main
 import (
 	"net/http"
 
+	"github.com/gin-gonic/contrib/static"
 	"github.com/gin-gonic/gin"
 )
 
@@ -11,10 +12,8 @@ func main() {
 
 	router := gin.Default()
 
-	router.LoadHTMLGlob("vue/*")
-	router.GET("/index", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "index.html", nil)
-	})
+	// Serve frontend static files
+	router.Use(static.Serve("/", static.LocalFile("./vue", true)))
 
 	router.GET("/suggest/:word", suggestionHandler)
 
