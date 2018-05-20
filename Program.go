@@ -2,7 +2,6 @@ package main
 
 import (
 	"net/http"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -12,6 +11,11 @@ func main() {
 
 	router := gin.Default()
 
+	router.LoadHTMLGlob("vue/*")
+	router.GET("/index", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "index.html", nil)
+	})
+
 	router.GET("/suggest/:word", suggestionHandler)
 
 	router.Run(":8080")
@@ -20,5 +24,5 @@ func main() {
 func suggestionHandler(context *gin.Context) {
 	word := context.Param("word")
 	suggestions := SuggestedWords(&word)
-	context.String(http.StatusOK, strings.Join(suggestions, " "))
+	context.JSON(http.StatusOK, suggestions)
 }
