@@ -29,6 +29,13 @@ type SortPair struct {
 	value int64
 }
 
+//PairList A slice of pairs that implements sort.Interface to sort by values
+type PairList []SortPair
+
+func (p PairList) Len() int           { return len(p) }
+func (p PairList) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
+func (p PairList) Less(i, j int) bool { return p[i].value < p[j].value }
+
 //Init construtor
 func Init() {
 	node = &trieNode{children: make(map[string]trieNode), words: make(map[string]int64)}
@@ -69,7 +76,7 @@ func add(originalWord *string, word *string, frequency *int64) {
 }
 
 //SuggestedWords returns autocomplete array of three top words by frequency
-func SuggestedWords(word *string) []SortPair {
+func SuggestedWords(word *string) PairList {
 	char := []rune(*word)
 	for index := 0; index < len(char); index++ {
 		nodeWord := currentNode.children[string(char[index])]
@@ -92,12 +99,15 @@ func SuggestedWords(word *string) []SortPair {
 			set = append(set, SortPair{key: word, value: frequency})
 		}
 	}
-	//TODO: add properly working sort
-	sort.Slice(set[:], func(i, j int) bool {
-		return set[i].key > set[j].key
-	})
+	//Add sort to determent first five results
+	sorted := make(PairList, len(set))
+	for index, pair := range set {
+		sorted[index] = pair
+	}
+	sort.Sort(sort.Reverse(sorted))
+
 	currentNode = node
-	return set[0:3]
+	return sorted
 }
 
 //edits form all deletes for a word
