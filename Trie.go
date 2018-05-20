@@ -66,7 +66,7 @@ func addToTrie(originalWord *string, word *string, frequency *int64) {
 }
 
 //SuggestedWords returns autocomplete array of three top words by frequency
-func SuggestedWords(word *string) PairList {
+func SuggestedWords(word *string) []string {
 	char := []rune(*word)
 	for index := 0; index < len(char); index++ {
 		if nodeWord, exists := currentNode.children[string(char[index])]; exists {
@@ -96,7 +96,11 @@ func SuggestedWords(word *string) PairList {
 	}
 	sort.Sort(sort.Reverse(sorted))
 
-	return sorted
+	keys := make([]string, 0, len(sorted))
+	for _, k := range sorted {
+		keys = append(keys, k.key)
+	}
+	return keys
 }
 
 //loads frequencies from txt file and adds them to trie
