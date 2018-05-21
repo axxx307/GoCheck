@@ -17,7 +17,7 @@ func main() {
 
 	router.GET("/suggest/:word", suggestionHandler)
 
-	router.Run(":8080")
+	router.Run(":8081")
 }
 
 func suggestionHandler(context *gin.Context) {
