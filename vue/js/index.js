@@ -49,6 +49,7 @@ var Autocomplete = Vue.component("autocomplete", {
 		inputValue: function inputValue() {
 			this.focus();
 			console.log(this.inputSplitted);
+			this.getSuggestions()
 			this.selectedIndex = 0;
 			this.wordIndex = this.inputSplitted.length - 1;
 		}
@@ -112,6 +113,14 @@ var Autocomplete = Vue.component("autocomplete", {
 			if (this.searchMatch.length === 1 && this.currentWord === this.searchMatch[0]) {
 				this.searchMatch = [];
 			}
+		},
+		getSuggestions: function getSuggestions() {
+			Vue.http.get('/suggest/'+this.inputSplitted[this.inputSplitted.length-1], function(data, status, request){
+				if(status == 200)
+				{
+				  this.users = data;
+				}
+			})
 		}
 	}
 });
