@@ -39,7 +39,6 @@ var Autocomplete = Vue.component("autocomplete", {
 	},
 	watch: {
 		inputValue: function inputValue() {
-			console.log(this.inputSplitted);
 			if (this.inputSplitted[this.inputSplitted.length-1] != "") {
 				this.getSuggestions(this.inputSplitted[this.inputSplitted.length-1])
 			}
