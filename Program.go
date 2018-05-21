@@ -23,5 +23,8 @@ func main() {
 func suggestionHandler(context *gin.Context) {
 	word := context.Param("word")
 	suggestions := SuggestedWords(&word)
+	if len(suggestions) > 5 {
+		suggestions = suggestions[0:5]
+	}
 	context.JSON(http.StatusOK, suggestions)
 }

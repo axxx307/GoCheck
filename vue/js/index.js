@@ -1,6 +1,5 @@
 // TODO: collision detection, autoscroll
 // new: tab and highlighting, textareas, follow caret
-var standardItems = ["input", "h1", "h2", "h3", "h4", "h5", "h6", "span", "div", "textarea", "margin", "padding", "display", "background", "background-color", "background-size", "background-repeat", "position", "top", "left", "right", "bottom"];
 var Autocomplete = Vue.component("autocomplete", {
 	template: "#autocomplete-tpl",
 	props: ["items", "placeholder", "label", "textarea", "rows", "cols"],
@@ -31,13 +30,6 @@ var Autocomplete = Vue.component("autocomplete", {
 	},
 
 	computed: {
-		listToSearch: function listToSearch() {
-			if (typeof this.items !== "undefined" && this.items.length > 0) {
-				return this.items;
-			} else {
-				return standardItems;
-			}
-		},
 		currentWord: function currentWord() {
 			return this.inputValue.replace(/(\r\n|\n|\r)/gm, ' ').split(' ')[this.wordIndex];
 		},
@@ -47,9 +39,10 @@ var Autocomplete = Vue.component("autocomplete", {
 	},
 	watch: {
 		inputValue: function inputValue() {
-			this.focus();
 			console.log(this.inputSplitted);
-			this.getSuggestions()
+			if (this.inputSplitted[this.inputSplitted.length-1] != "") {
+				this.getSuggestions(this.inputSplitted[this.inputSplitted.length-1])
+			}
 			this.selectedIndex = 0;
 			this.wordIndex = this.inputSplitted.length - 1;
 		}
@@ -57,7 +50,7 @@ var Autocomplete = Vue.component("autocomplete", {
 	methods: {
 		highlightWord: function highlightWord(word) {
 			var regex = new RegExp("(" + this.currentWord + ")", "g");
-			return word.replace(regex, '<mark>$1</mark>');
+			return word.toString().replace(regex, '<mark>$1</mark>');
 		},
 		setWord: function setWord(word) {
 			var currentWords = this.inputValue.replace(/(\r\n|\n|\r)/gm, '__br__ ').split(' ');
@@ -105,8 +98,8 @@ var Autocomplete = Vue.component("autocomplete", {
 			var _this2 = this;
 
 			this.searchMatch = [];
-			if (this.currentWord !== "") {
-				this.searchMatch = this.listToSearch.filter(function (el) {
+			if (this.currentWord !== "" && this.items != undefined) {
+				this.searchMatch = this.items.filter(function (el) {
 					return el.indexOf(_this2.currentWord) >= 0;
 				});
 			}
@@ -114,11 +107,12 @@ var Autocomplete = Vue.component("autocomplete", {
 				this.searchMatch = [];
 			}
 		},
-		getSuggestions: function getSuggestions() {
-			Vue.http.get('/suggest/'+this.inputSplitted[this.inputSplitted.length-1], function(data, status, request){
+		getSuggestions: function getSuggestions(word) {
+			this.$http.get('/suggest/'+word, function(data, status, request){
 				if(status == 200)
 				{
-				  this.users = data;
+				  this.items = data;
+				  this.focus();
 				}
 			})
 		}
