@@ -50,7 +50,7 @@ var Autocomplete = Vue.component("autocomplete", {
 	methods: {
 		highlightWord: function highlightWord(word) {
 			var regex = new RegExp("(" + this.currentWord + ")", "g");
-			return word.toString().replace(regex, '<mark>$1</mark>');
+			return word.replace(regex, '<mark>$1</mark>');
 		},
 		setWord: function setWord(word) {
 			var currentWords = this.inputValue.replace(/(\r\n|\n|\r)/gm, '__br__ ').split(' ');

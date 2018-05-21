@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>VueJS Autocomplete [UPDATED]</title>
+  <title>Go Autocomplete</title>
   
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/5.0.0/normalize.min.css">
 
@@ -27,7 +27,7 @@
         'autocomplete-list': true,
         [id+'-list']: true
       }" v-if="searchMatch.length > 0">
-        <li :class="{active: selectedIndex === index}" v-for="(result, index) in searchMatch" @click="selectItem(index), chooseItem()" v-html="highlightWord(result)">
+        <li :class="{active: selectedIndex === index}" v-for="(index, result) in searchMatch" @click="selectItem(index), chooseItem()" v-html="highlightWord(result)">
 
         </li>
       </ul>
@@ -40,27 +40,15 @@
  <div class="container">
   <div class="container-row">
    <div class="container-item">
-    <h2>VueJs - Autocomplete</h2>
-    <p>A small proof of concept of an autocomplete<br />component in VueJS. Use your arrow keys to navigate,<br /> tab to choose first result, <br />enter or mouse to choose selected item.</p>
+    <h2>Go Autocomplete</h2>
+    <p><br /> Use your arrow keys to navigate,<br /> tab to choose first result, <br />enter or mouse to choose selected item.</p>
    </div>
 
 
    <div class="container-item">
-    <autocomplete label="Standard items:" placeholder="span, div, h1..." />
+    <autocomplete label="Standard items:" />
    </div>
-
-   <div class="container-item">
-    <br />
-    <br />
-    <autocomplete label="Custom items:" :items="['all', 'auto', 'complete', 'items']" placeholder="all, auto..." />
-   </div>
-		<div class="container-item">
-    <br />
-    <br />
-    <autocomplete label="Textarea" rows="5" placeholder="Your text..." textarea="true" />
-   </div>
-  </div>
- </div>
+   
 </div>
   <script src='https://cdnjs.cloudflare.com/ajax/libs/vue/2.3.3/vue.js'></script>
   <script src='http://cdnjs.cloudflare.com/ajax/libs/vue/1.0.8/vue.js'></script>
