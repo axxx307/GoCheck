@@ -1,23 +1,30 @@
 package main
 
 import (
+	"bufio"
+	"fmt"
 	"net/http"
+	"os"
 
-	"github.com/gin-gonic/contrib/static"
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
 	Init()
 
-	router := gin.Default()
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Print("Enter text: ")
+	text, _ := reader.ReadString('\n')
+	fmt.Println(SuggestCorrection(&text))
 
-	// Serve frontend static files
-	router.Use(static.Serve("/", static.LocalFile("./vue", true)))
+	// router := gin.Default()
 
-	router.GET("/suggest/:word", suggestionHandler)
+	// // Serve frontend static files
+	// router.Use(static.Serve("/", static.LocalFile("./vue", true)))
 
-	router.Run(":8081")
+	// router.GET("/suggest/:word", suggestionHandler)
+
+	// router.Run(":8081")
 }
 
 func suggestionHandler(context *gin.Context) {
@@ -28,3 +35,15 @@ func suggestionHandler(context *gin.Context) {
 	}
 	context.JSON(http.StatusOK, suggestions)
 }
+
+///при генерации документа записываем его в монгу
+///вместе с доступными пермутациями
+///из монги составить префиксное дерево на основе термов и держать их в памяти/кэше
+///при запросах, сначала доставать по пермутациям вместе с носновной информацией,
+///в дереве находить СЛЕДУЮЩЕЕ слово, базируясь на метадате найденного слова
+///Handling Catalog, Part
+///Handling Catalog rank 2, Part rank 1
+
+///записали хэши делитедов в монгу
+///записали данные
+///нашли слово

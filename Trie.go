@@ -2,6 +2,8 @@ package main
 
 import (
 	"bufio"
+	"crypto/sha1"
+	"encoding/base64"
 	"log"
 	"os"
 	"sort"
@@ -11,6 +13,8 @@ import (
 
 var node *trieNode
 var currentNode *trieNode
+var words map[string]int
+var deletions map[string][]string
 
 //trieNode is a node in Trie structure
 type trieNode struct {
@@ -49,8 +53,13 @@ func Init() {
 	node = &trieNode{children: make(map[string]trieNode), words: make(map[string]int64)}
 	currentNode = node
 
+	words = make(map[string]int)
+	deletions = make(map[string][]string)
+
 	loadFrequencies()
 	println("Finished loading trie")
+
+	println("Word training completed")
 }
 
 //addToTrie function adds words + character entry to and Trie
@@ -115,6 +124,26 @@ func SuggestedWords(word *string) []string {
 	return keys
 }
 
+func SuggestCorrection(word *string) string {
+	if _, exists := words[*word]; exists {
+		return *word
+	}
+	permutations := edits([]rune(*word), 2)
+	for _, item := range permutations {
+		h := sha1.New()
+		h.Write([]byte(item))
+		hash := base64.URLEncoding.EncodeToString(h.Sum(nil))
+		if items, exists := deletions[hash]; exists {
+			freqs := make([]int, 0)
+			for _, value := range items {
+				freqs = append(freqs, words[value])
+			}
+			return items[0]
+		}
+	}
+	return ""
+}
+
 //loads frequencies from txt file and adds them to trie
 func loadFrequencies() {
 	file, err := os.Open("frequency_dictionary.txt")
@@ -132,10 +161,48 @@ func loadFrequencies() {
 			println(err, values[0])
 			continue
 		}
+		if values[0] == "successful" {
+			println("got it")
+		}
+		permutations := edits([]rune(values[0]), 1)
+		createArray(permutations, values[0])
 		addToTrie(&values[0], &values[0], &frequency)
 	}
 
 	if err := scanner.Err(); err != nil {
 		log.Fatal(err)
 	}
+}
+
+func createArray(permutations []string, word string) {
+	for _, perm := range permutations {
+		h := sha1.New()
+		h.Write([]byte(perm))
+		hash := base64.URLEncoding.EncodeToString(h.Sum(nil))
+		if _, exists := deletions[hash]; !exists {
+			deletions[hash] = []string{word}
+		} else {
+			deletions[hash] = append(deletions[hash], word)
+		}
+	}
+}
+
+// only delete one, no transposes, replaces and inserts
+func edits(q []rune, ed int) (v []string) {
+	v = append(v, string(q))
+	ed++
+
+	for i := 0; i < len(q); i++ {
+		x := remove(q, i)
+		v = append(v, string(x))
+		if ed < 2 {
+			v = append(v, edits(x, ed)...)
+		}
+	}
+	return
+}
+
+func remove(runes []rune, i int) []rune {
+	var v = append([]rune{}, runes[:i]...)
+	return append(v, runes[i+1:]...)
 }
