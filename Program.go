@@ -1,10 +1,8 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"net/http"
-	"os"
 
 	"github.com/gin-gonic/gin"
 )
@@ -12,9 +10,7 @@ import (
 func main() {
 	Init()
 
-	reader := bufio.NewReader(os.Stdin)
-	fmt.Print("Enter text: ")
-	text, _ := reader.ReadString('\n')
+	text := "handlin"
 	fmt.Println(SuggestCorrection(&text))
 
 	// router := gin.Default()

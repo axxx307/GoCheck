@@ -146,7 +146,7 @@ func SuggestCorrection(word *string) string {
 
 //loads frequencies from txt file and adds them to trie
 func loadFrequencies() {
-	file, err := os.Open("frequency_dictionary.txt")
+	file, err := os.Open("frequency.txt")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -161,10 +161,10 @@ func loadFrequencies() {
 			println(err, values[0])
 			continue
 		}
-		if values[0] == "successful" {
-			println("got it")
+		permutations := edits([]rune(values[0]), 0)
+		for _, item := range permutations {
+			println(item)
 		}
-		permutations := edits([]rune(values[0]), 1)
 		createArray(permutations, values[0])
 		addToTrie(&values[0], &values[0], &frequency)
 	}
