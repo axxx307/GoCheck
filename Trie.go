@@ -14,9 +14,21 @@ var currentNode *trieNode
 
 //trieNode is a node in Trie structure
 type trieNode struct {
-	children map[string]trieNode
-	words    map[string]int64
+	children       map[string]trieNode
+	words          map[string]int64
+	predictionType wordType
+	nextWord       string
+	metadata       string
+	ranking        int32
 }
+
+type wordType struct {
+	Concept  predictionType
+	Subtitle predictionType
+	Category predictionType
+}
+
+type predictionType string
 
 //SortPair is used for sorting the resulting frequencies
 //of all found autocomletion words
