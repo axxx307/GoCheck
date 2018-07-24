@@ -18,18 +18,26 @@ var deletions map[string][]string
 
 //trieNode is a node in Trie structure
 type trieNode struct {
-	children       map[string]trieNode
+	children       map[string]*trieNode
 	words          map[string]int64
 	predictionType wordType
-	nextWord       string
 	metadata       string
 	ranking        int32
+	previous       string
+	next           []string
 }
 
 type wordType struct {
 	Concept  predictionType
 	Subtitle predictionType
 	Category predictionType
+}
+
+type Document struct {
+	DocumentId  string
+	Title       string
+	Subtitle    string
+	FormedTitle string
 }
 
 type predictionType string
@@ -50,7 +58,7 @@ func (p PairList) Less(i, j int) bool { return p[i].value < p[j].value }
 
 //Init construtor
 func Init() {
-	node = &trieNode{children: make(map[string]trieNode), words: make(map[string]int64)}
+	node = &trieNode{children: make(map[string]*trieNode), words: make(map[string]int64), next: []string{}}
 	currentNode = node
 
 	words = make(map[string]int)
@@ -62,6 +70,11 @@ func Init() {
 	println("Word training completed")
 }
 
+//
+func GetWords() map[string]int {
+	return words
+}
+
 //addToTrie function adds words + character entry to and Trie
 func addToTrie(originalWord *string, word *string, frequency *int64) {
 	char := []rune(*word)
@@ -71,17 +84,63 @@ func addToTrie(originalWord *string, word *string, frequency *int64) {
 			existingNode.words[*originalWord] = *frequency
 		}
 	} else {
-		newNode := &trieNode{children: make(map[string]trieNode), words: make(map[string]int64)}
+		newNode := &trieNode{children: make(map[string]*trieNode), words: make(map[string]int64)}
 		if len(*word) == 1 {
 			newNode.words[*originalWord] = *frequency
 		}
-		currentNode.children[string(safeSubstring)] = *newNode
+		currentNode.children[string(safeSubstring)] = newNode
 	}
 	if len(*word) > 1 {
 		child := currentNode.children[string(safeSubstring)]
-		currentNode = &child
+		currentNode = child
 		safeRecursiveString := string(char[1:len(*word)])
 		addToTrie(originalWord, &safeRecursiveString, frequency)
+	}
+	currentNode = node
+}
+func AddCompoundToTrie(originalWords []string, frequency *int64) {
+	var Add func(originalWord *string, word *string, frequency *int64, next string)
+	Add = func(originalWord *string, word *string, frequency *int64, next string) {
+		char := []rune(*word)
+		safeSubstring := char[0:1]
+		if existingNode, exists := currentNode.children[string(safeSubstring)]; exists {
+			if _, wordExists := existingNode.words[*originalWord]; !wordExists && len(*word) == 1 {
+				existingNode.words[*originalWord] = *frequency
+				return
+			} else if len(*word) == 1 {
+				if next != "" {
+					currentNode.children[string(safeSubstring)].next = append(currentNode.children[string(safeSubstring)].next, next)
+					currentNode = currentNode.children[string(safeSubstring)]
+					return
+				}
+			}
+		} else {
+			newNode := &trieNode{children: make(map[string]*trieNode), words: make(map[string]int64), next: []string{}}
+			if len(*word) == 1 {
+				newNode.words[*originalWord] = *frequency
+				currentNode.children[string(safeSubstring)] = newNode
+				if next != "" {
+					currentNode.children[string(safeSubstring)].next = append(currentNode.children[string(safeSubstring)].next, next)
+				}
+				currentNode = currentNode.children[string(safeSubstring)]
+				return
+			} else {
+				currentNode.children[string(safeSubstring)] = newNode
+			}
+		}
+		if len(*word) > 1 {
+			child := currentNode.children[string(safeSubstring)]
+			currentNode = child
+			safeRecursiveString := string(char[1:len(*word)])
+			Add(originalWord, &safeRecursiveString, frequency, next)
+		}
+	}
+	for ind, word := range originalWords {
+		if ind+1 >= len(originalWords) {
+			Add(&word, &word, frequency, "")
+			continue
+		}
+		Add(&word, &word, frequency, originalWords[ind+1])
 	}
 	currentNode = node
 }
@@ -91,28 +150,39 @@ func SuggestedWords(word *string) []string {
 	char := []rune(*word)
 	for index := 0; index < len(char); index++ {
 		if nodeWord, exists := currentNode.children[string(char[index])]; exists {
-			currentNode = &nodeWord
+			currentNode = nodeWord
 		}
 	}
-	set := []SortPair{}
+	set := &[]SortPair{}
+	nodeAnchor := currentNode
+	if len(currentNode.next) > 0 && currentNode.next[0] != "" {
+		for _, item := range currentNode.next {
+			getNodeSet(item, currentNode)
+			getSet(currentNode, set)
+			currentNode = nodeAnchor
+		}
+	}
 	for _, child := range currentNode.children {
+
 		//get next childs words values
 		for _, chld := range child.children {
 			for word, frequency := range chld.words {
-				set = append(set, SortPair{key: word, value: frequency})
+				pair := &SortPair{key: word, value: frequency}
+				*set = append(*set, *pair)
 			}
 		}
 
 		//get closest word and their frequencies
 		for word, frequency := range child.words {
-			set = append(set, SortPair{key: word, value: frequency})
+			pair := &SortPair{key: word, value: frequency}
+			*set = append(*set, *pair)
 		}
 	}
 	currentNode = node
 
 	//Add sort to determent first five results
-	sorted := make(PairList, len(set))
-	for index, pair := range set {
+	sorted := make(PairList, len(*set))
+	for index, pair := range *set {
 		sorted[index] = pair
 	}
 	sort.Sort(sort.Reverse(sorted))
@@ -144,9 +214,40 @@ func SuggestCorrection(word *string) string {
 	return ""
 }
 
+func getKeys(set []SortPair) []string {
+	//Add sort to determent first five results
+	sorted := make(PairList, len(set))
+	for index, pair := range set {
+		sorted[index] = pair
+	}
+	sort.Sort(sort.Reverse(sorted))
+
+	keys := make([]string, 0, len(sorted))
+	for _, k := range sorted {
+		keys = append(keys, k.key)
+	}
+	return keys
+}
+
+func getNodeSet(word string, cNode *trieNode) {
+	char := []rune(word)
+	for index := 0; index < len(char); index++ {
+		if nodeWord, exists := currentNode.children[string(char[index])]; exists {
+			currentNode = nodeWord
+		}
+	}
+}
+
+func getSet(child *trieNode, set *[]SortPair) {
+	for word, frequency := range child.words {
+		pair := &SortPair{key: word, value: frequency}
+		*set = append(*set, *pair)
+	}
+}
+
 //loads frequencies from txt file and adds them to trie
 func loadFrequencies() {
-	file, err := os.Open("frequency.txt")
+	file, err := os.Open("frequency_dictionary.txt")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -162,9 +263,6 @@ func loadFrequencies() {
 			continue
 		}
 		permutations := edits([]rune(values[0]), 0)
-		for _, item := range permutations {
-			println(item)
-		}
 		createArray(permutations, values[0])
 		addToTrie(&values[0], &values[0], &frequency)
 	}

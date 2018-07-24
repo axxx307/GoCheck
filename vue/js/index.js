@@ -40,7 +40,8 @@ var Autocomplete = Vue.component("autocomplete", {
 	watch: {
 		inputValue: function inputValue() {
 			if (this.inputSplitted[this.inputSplitted.length-1] != "") {
-				this.getSuggestions(this.inputSplitted[this.inputSplitted.length-1])
+				setTimeout(() => 
+				this.getSuggestions(this.inputSplitted[this.inputSplitted.length-1]), 2000)
 			}
 			this.selectedIndex = 0;
 			this.wordIndex = this.inputSplitted.length - 1;
