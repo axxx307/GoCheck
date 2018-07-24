@@ -4,28 +4,36 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/gin-gonic/contrib/static"
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
 	Init()
 
-	text := "handlin"
-	fmt.Println(SuggestCorrection(&text))
+	// text := "speling"
+	// fmt.Println(SuggestCorrection(&text))
 
-	// router := gin.Default()
+	router := gin.Default()
 
-	// // Serve frontend static files
-	// router.Use(static.Serve("/", static.LocalFile("./vue", true)))
+	// Serve frontend static files
+	router.Use(static.Serve("/", static.LocalFile("./vue", true)))
 
-	// router.GET("/suggest/:word", suggestionHandler)
+	router.GET("/suggest/:word", suggestionHandler)
 
-	// router.Run(":8081")
+	router.Run(":8081")
 }
 
 func suggestionHandler(context *gin.Context) {
 	word := context.Param("word")
-	suggestions := SuggestedWords(&word)
+	corrected := SuggestCorrection(&word)
+	fmt.Println(corrected)
+	var suggestions []string
+	if corrected != "" {
+		suggestions = SuggestedWords(&corrected)
+	} else {
+		suggestions = SuggestedWords(&word)
+	}
 	if len(suggestions) > 5 {
 		suggestions = suggestions[0:5]
 	}
